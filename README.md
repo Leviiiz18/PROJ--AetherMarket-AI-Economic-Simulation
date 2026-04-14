@@ -39,13 +39,10 @@ Imagine a tiny digital city with **10 smart agents**. To survive, they must mana
 3. **The AI learns**: Every time an agent makes a good trade, it gets a "reward" and becomes smarter for the next round.
 
 ## 🧠 The Mission: What are we learning?
-We are studying how different personalities—like a **Risk-Taker** who hoards resources or a **Conservative** who plays it safe—change the economy. We want to see:
-- Can a stable economy exist with different types of people?
-- Do greedy agents cause crashes?
-- How does "personality" change the price of things?
+We are here to **prove that decentralized AI agents can learn, compete, and create complex economic behavior without any central control.** By watching how specialized personalities—like a Risk-Taker or a Careful Trader—handle scarcity and greed, we unlock secrets of emergent intelligence.
 
 ## 🏆 The Ultimate Goal
-To build a perfect **"Economic Sandbox"**. A safe digital place where we can test real-world market ideas and see the results instantly without risking real money. 
+To build a high-fidelity **sandbox to study emergent intelligence in economic systems.** A safe, digital laboratory where we can observe how life-like market behaviors evolve naturally from autonomous neural policies. 
 
 ## 📂 Project Structure
 
