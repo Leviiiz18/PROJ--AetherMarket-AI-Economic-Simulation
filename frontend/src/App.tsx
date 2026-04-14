@@ -15,20 +15,15 @@ function cn(...inputs: ClassValue[]) {
 
 // --- TYPES ---
 
-interface AgentState {
+interface Agent {
   id: string;
   money: number;
   food: number;
-  energy: number;
-  materials: number;
   alive: boolean;
-  extinct: boolean;
-  lives: number;
-  generation: number;
-  reward: number;
-  action: string;
-  persona: string;
-  logs: string[];
+  reward?: number;
+  action?: string;
+  persona?: string;
+  logs?: any[];
 }
 
 interface MarketData {
@@ -43,6 +38,7 @@ interface AnalyticsData {
   market_status: string;
   contagion_index: number;
   survival_rate: number;
+  total_debt: number;
   wealth_distribution: number[];
 }
 
@@ -50,7 +46,7 @@ interface SimPayload {
   step: number;
   market: MarketData;
   analytics: AnalyticsData;
-  agents: AgentState[];
+  agents: Agent[];
   history: any[];
 }
 
@@ -118,9 +114,8 @@ const NexusNav = () => {
 // --- PAGES ---
 
 const NexusOverview = ({ data }: any) => {
-    const totalWealth = data?.agents.reduce((acc: number, a: AgentState) => acc + (a.money || 0), 0) || 0;
-    const aliveCount = data?.agents.filter((a: AgentState) => a.alive).length || 0;
-    const gini = data?.analytics?.gini || 0;
+    const totalWealth = data?.agents.reduce((acc: number, a: Agent) => acc + (a.money || 0), 0) || 0;
+    const aliveCount = data?.agents.filter((a: Agent) => a.alive).length || 0;
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-40 px-12 h-screen overflow-y-auto custom-scrollbar pb-32">
@@ -151,10 +146,11 @@ const NexusOverview = ({ data }: any) => {
                         </div>
                     </div>
                     <div className="nexus-card flex flex-col justify-center p-10">
-                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4 text-[#9d4edd]">Inequality_Gini</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4 text-[#9d4edd]">Global_System_Debt</span>
                         <div className="flex items-end gap-3">
-                            <span className="text-6xl font-display font-bold">{gini.toFixed(2)}</span>
-                            <span className="text-xl font-bold opacity-20 mb-2">INDX</span>
+                            <span className={cn("text-6xl font-display font-bold", (data?.analytics?.total_debt || 0) > 0 ? "text-red-500" : "text-white")}>
+                                ₹{Math.round(data?.analytics?.total_debt || 0)}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -238,30 +234,25 @@ const NexusAnalysis = ({ data }: any) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="nexus-card p-10 h-[300px] flex flex-col">
-                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#00C7B7] mb-8">System_Evolution_Feed</span>
-                    <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4">
-                        {(data?.agents || []).map((agent: AgentState) => (
-                            <div key={agent.id} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
-                                <div className="flex items-center gap-3">
-                                    <div className={cn("w-2 h-2 rounded-full", agent.alive ? "bg-green-500" : (agent.extinct ? "bg-red-500" : "bg-amber-500"))} />
-                                    <span className="text-[10px] font-bold text-white/60">Node_{agent.id.split('_')[1]}</span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <span className="text-[9px] font-black opacity-30 tracking-widest uppercase">Gen_{agent.generation}</span>
-                                    <span className={cn("text-[9px] font-black tracking-widest uppercase", agent.extinct ? "text-red-600" : "text-[#9d4edd]")}>
-                                        {agent.extinct ? "Extinct" : `${agent.lives}_Lives`}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#9d4edd] mb-8">Survival_Velocity</span>
+                    <div className="flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data?.history || []}>
+                                <XAxis dataKey="step" hide />
+                                <YAxis domain={[0, 1]} hide />
+                                <Area type="stepAfter" dataKey="survival_rate" stroke="#00C7B7" fill="#00C7B710" strokeWidth={2} />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
                 <div className="nexus-card p-10 h-[300px] flex flex-col justify-center text-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#c77dff] mb-4">Market_Volatility_Index</span>
-                    <h3 className="text-7xl font-display font-black">{(data?.analytics?.volatility * 100 || 0).toFixed(1)}%</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#c77dff] mb-4">Total_National_Debt</span>
+                    <h3 className={cn("text-7xl font-display font-black", (data?.analytics?.total_debt || 0) > 500 ? "text-red-500 animate-pulse" : "text-white")}>
+                        ₹{Math.round(data?.analytics?.total_debt || 0)}
+                    </h3>
                     <div className="mt-4 flex items-center justify-center gap-2">
-                         <div className={cn("w-2 h-2 rounded-full", data?.analytics?.volatility > 0.1 ? "bg-amber-500 animate-pulse" : "bg-green-500")} />
-                         <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">{data?.analytics?.market_status}</span>
+                         <div className={cn("w-2 h-2 rounded-full", (data?.analytics?.total_debt || 0) > 200 ? "bg-red-500 animate-pulse" : "bg-green-500")} />
+                         <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">CREDIT_UTILIZATION</span>
                     </div>
                 </div>
             </div>
@@ -310,67 +301,8 @@ const FluxStream = ({ data }: any) => (
     </motion.div>
 );
 
-const NexusAgentCard = ({ agent, onClick, isSelected }: any) => (
-  <motion.div 
-    whileHover={{ scale: 1.02 }}
-    onClick={() => onClick(agent.id)}
-    className={cn(
-      "nexus-card min-w-[320px] p-6 cursor-pointer border transition-all duration-300 relative overflow-hidden group",
-      isSelected ? "border-[#9d4edd] bg-[#9d4edd]/5 shadow-[0_0_30px_rgba(157,78,221,0.1)]" : "border-white/5 bg-[#121212] hover:border-white/20",
-      !agent.alive ? (agent.extinct ? "opacity-30 grayscale saturate-0" : "opacity-50 blur-[1px]") : ""
-    )}
-  >
-    <div className="flex justify-between items-start mb-6">
-      <div className="flex items-center gap-4">
-        <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg shadow-inner",
-          agent.alive ? (agent.extinct ? "bg-red-900/40 text-red-500" : "bg-[#9d4edd]/20 text-[#9d4edd]") : "bg-white/5 text-white/40"
-        )}>
-          {agent.id.split('_')[1]}
-        </div>
-        <div className="flex flex-col">
-          <span className="font-bold text-white tracking-tight text-lg flex items-center gap-2">
-            Node_{agent.id.split('_')[1]}
-            <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full opacity-60">G{agent.generation}</span>
-          </span>
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#9d4edd]">{agent.persona}</span>
-        </div>
-      </div>
-      <div className="flex gap-1">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className={cn(
-            "w-2 h-2 rounded-full transition-colors",
-            i < agent.lives ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "bg-white/10"
-          )} />
-        ))}
-      </div>
-    </div>
-    
-    <div className="grid grid-cols-2 gap-6 mb-4">
-      <div className="flex flex-col">
-        <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest mb-1">Liquidity</span>
-        <span className="text-xl font-display font-medium text-white">₹{Math.floor(agent.money || 0)}</span>
-      </div>
-      <div className="flex flex-col items-end text-right">
-        <span className="text-[10px] uppercase font-bold text-white/40 tracking-widest mb-1">Nutrition</span>
-        <span className={cn(
-          "text-xl font-display font-medium",
-          (agent.food || 0) < 2 ? "text-red-500 animate-pulse" : "text-[#00C7B7]"
-        )}>{(agent.food || 0).toFixed(1)}</span>
-      </div>
-    </div>
-
-    <div className="flex justify-between items-center py-2 border-t border-white/5">
-        <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">{agent.action}</span>
-        {agent.extinct && (
-           <span className="text-[8px] font-black text-red-600 bg-red-600/10 px-2 py-1 rounded tracking-tighter uppercase">Neural_Extinction</span>
-        )}
-    </div>
-  </motion.div>
-);
-
 const AgentRoster = ({ data }: any) => {
-    const [selectedAgent, setSelectedAgent] = useState<AgentState | null>(null);
+    const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
 
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 px-12 h-screen flex flex-col overflow-y-auto custom-scrollbar pb-32">
@@ -382,13 +314,56 @@ const AgentRoster = ({ data }: any) => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(data?.agents || []).map((agent: AgentState) => (
-                    <NexusAgentCard 
-                        key={agent.id}
-                        agent={agent}
+                {data?.agents.map((agent: Agent) => (
+                    <motion.div 
+                        key={agent.id} 
+                        whileHover={{ scale: 1.02 }}
                         onClick={() => setSelectedAgent(agent)}
-                        isSelected={selectedAgent?.id === agent.id}
-                    />
+                        className={cn("nexus-card flex items-center justify-between transition-all cursor-pointer group", !agent.alive && "opacity-20 grayscale")}
+                    >
+                        <div className="flex items-center gap-6">
+                            <div className={cn("status-ring", agent.alive && "active")} />
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-3 mb-1">
+                                    <span className="text-xs font-bold tracking-widest text-[#9d4edd] opacity-60 uppercase">Node_{agent.id.split('_')[1]}</span>
+                                    {agent.persona && (
+                                        <span className={cn(
+                                            "text-[8px] font-black px-2 py-0.5 rounded-full border tracking-widest",
+                                            agent.persona === 'RISK_TAKER' ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                                            agent.persona === 'CONSERVATIVE' ? "bg-cyan-500/10 text-cyan-500 border-cyan-500/20" :
+                                            "bg-amber-500/20 text-amber-500 border-amber-500/30"
+                                        )}>
+                                            {agent.persona.replace('_', ' ')}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className={cn(
+                                        "text-lg font-display font-bold",
+                                        agent.money < 0 ? "text-red-500" : "text-white"
+                                    )}>
+                                        ₹{Math.floor(agent.money).toLocaleString()}
+                                    </span>
+                                    {agent.money < 0 && (
+                                        <span className="text-[8px] font-black text-red-500 uppercase tracking-widest animate-pulse">
+                                            DEBT_LOAD: {Math.round((Math.abs(agent.money)/200)*100)}%
+                                        </span>
+                                    )}
+                                </div>
+                                {agent.alive && (
+                                    <div className="flex flex-col gap-1 mt-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[9px] font-black bg-white/5 px-2 py-1 rounded text-white/40 uppercase">{agent.action || 'IDLE'}</span>
+                                            <span className={cn("text-[9px] font-black", (agent.reward || 0) >= 0 ? "text-green-400" : "text-red-400")}>
+                                                {(agent.reward || 0) > 0 ? "+" : ""}{(agent.reward || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <Radio size={16} className="opacity-0 group-hover:opacity-40 transition-opacity text-[#9d4edd]" />
+                    </motion.div>
                 ))}
             </div>
 
@@ -409,24 +384,30 @@ const AgentRoster = ({ data }: any) => {
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-black text-[#9d4edd] uppercase tracking-[0.3em] mb-2">Neural_Log_Sequence</span>
                                     <h3 className="text-3xl font-display font-bold">Node_{selectedAgent.id.split('_')[1]} Intelligence</h3>
-                                    <div className="flex gap-4 mt-2">
-                                        <span className="text-[10px] opacity-40 uppercase tracking-widest">Gen: {selectedAgent.generation}</span>
-                                        <span className="text-[10px] opacity-40 uppercase tracking-widest">Lives: {selectedAgent.lives}/3</span>
-                                    </div>
                                 </div>
                                 <button onClick={() => setSelectedAgent(null)} className="text-white/20 hover:text-white uppercase text-[10px] font-bold tracking-widest">Close_Log</button>
                             </div>
 
                             <div className="bg-black/50 border border-white/5 rounded-2xl p-8 max-h-[400px] overflow-y-auto custom-scrollbar font-mono text-sm leading-relaxed">
-                                {selectedAgent.logs?.slice().reverse().map((log: any, idx: number) => (
+                                {selectedAgent.logs?.slice().reverse().map((log, idx) => (
                                     <div key={idx} className={cn("mb-8 pb-8 border-b border-white/5 last:border-0 last:mb-0 last:pb-0", idx === 0 ? "text-[#9d4edd]" : "opacity-40")}>
-                                        <div className="flex justify-between mb-4">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#9d4edd]">Log_Entry_{idx}</span>
-                                            <span className="text-[10px] font-black opacity-30 tracking-widest uppercase">Sequence_Captured</span>
+                                        <div className="flex flex-col items-end">
+                                            <span className={cn(
+                                                "text-lg font-display font-bold",
+                                                selectedAgent.money < 0 ? "text-red-400" : "text-white"
+                                            )}>
+                                                ₹{selectedAgent.money.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            </span>
+                                            {selectedAgent.money < 0 && (
+                                                <span className="text-[8px] font-black text-red-500 uppercase tracking-tighter animate-pulse">
+                                                    IN_DEBT: {Math.round((Math.abs(selectedAgent.money)/200)*100)}%
+                                                </span>
+                                            )}
+                                            <span className="text-[10px] opacity-30 font-bold uppercase tracking-widest text-right">Liquidity</span>
                                         </div>
-                                        <div className="text-xs space-y-1">
-                                            {typeof log === 'string' ? log : JSON.stringify(log)}
-                                        </div>
+                                        <pre className="whitespace-pre-wrap">
+                                            {JSON.stringify(log, null, 2)}
+                                        </pre>
                                     </div>
                                 ))}
                                 {(!selectedAgent.logs || selectedAgent.logs.length === 0) && (
@@ -437,13 +418,11 @@ const AgentRoster = ({ data }: any) => {
                             <div className="mt-8 grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                                     <span className="text-[9px] font-bold opacity-30 uppercase tracking-widest block mb-1">Observation_Stream</span>
-                                    <span className="text-xs font-medium opacity-60">Status: {selectedAgent.alive ? 'Nominal' : 'Terminated'}</span>
+                                    <span className="text-xs font-medium opacity-60">Status: Nominal / Markovian</span>
                                 </div>
                                 <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                    <span className="text-[9px] font-bold opacity-30 uppercase tracking-widest block mb-1">Dynasty_Check</span>
-                                    <span className={cn("text-xs font-medium", selectedAgent.extinct ? "text-red-500" : "text-[#9d4edd]")}>
-                                        {selectedAgent.extinct ? 'Extinguished' : 'Heir_Eligible'}
-                                    </span>
+                                    <span className="text-[9px] font-bold opacity-30 uppercase tracking-widest block mb-1">Policy_Certainty</span>
+                                    <span className="text-xs font-medium opacity-60">Determinism: [0.85] (Stochastic)</span>
                                 </div>
                             </div>
                         </motion.div>

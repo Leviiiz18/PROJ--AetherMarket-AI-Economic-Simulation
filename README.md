@@ -58,6 +58,10 @@ Imagine a tiny digital city with **10 smart agents**. To survive, they must mana
     - **Cascading Failures**: A crash in one resource (e.g., Energy) triggers downward price pressure across the entire ecosystem.
     - **Interdependency Engine**: Complex resource-coupling logic simulating global economic panic.
     - **Red Alert Interface**: High-intensity CRT glitch visuals and system-wide alarms during contagion loops.
+- **🏦 Financial Resilience (Phase 6)**:
+    - **Credit Facility**: Agents can borrow up to ₹200 to survive market crashes.
+    - **Hard Bankruptcy**: Agents face 5% per-step interest on debt; failure to repay results in final extinction.
+    - **Debt Forensics**: Live 'Global System Debt' and individual node credit utilization tracking.
 - **📉 Demographic Survival**: Live **Survival Rate** tracking showing population decay over the simulation cycle.
 - **📊 Wealth Distribution**: High-fidelity histograms visualizing the capital spread across different neural personas.
 
