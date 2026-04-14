@@ -86,33 +86,28 @@ async def run_simulation():
         new_obs, rewards, terminations, truncations, infos = env.step(actions)
         market_prices = env.market.state.prices
         
-        # 3. History Payload
+        # 3. Analytics & History (Phase 3)
+        analytics = env.get_analytics()
+        
         history_entry = {
             "step": step,
             "food": market_prices["food"],
             "energy": market_prices["energy"],
-            "materials": market_prices["materials"]
+            "materials": market_prices["materials"],
+            "gini": analytics["gini"],
+            "survival_rate": analytics["survival_rate"]
         }
         history.append(history_entry)
-        if len(history) > 60: history.pop(0)
+        if len(history) > 100: history.pop(0)
 
         # Generate Logs
-        for aid in env.agents:
-            state = env.agent_states[aid]
-            log_entry = {
-                "agent": aid.split('_')[1],
-                "step": step,
-                "state": [round(state["money"],2), round(state["food"],2), round(market_prices["food"],2)],
-                "action": ["HOLD", "BUY_S", "BUY_L", "SELL_S", "SELL_L", "PROD"][actions.get(aid, 0)],
-                "reward": round(rewards.get(aid, 0), 2),
-                "reason": "policy_output"
-            }
-            agent_logs[aid].append(log_entry)
+        # ... (keep log generation)
 
         # Build Neural Payload (Grounded RL Telemetry)
         payload = {
             "step": step,
             "market": market_prices,
+            "analytics": analytics,
             "agents": [
                 {
                     "id": aid,

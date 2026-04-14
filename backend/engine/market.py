@@ -12,6 +12,7 @@ class MarketState:
     total_supply: Dict[str, float] = field(default_factory=lambda: {k: 1000.0 for k in ["food", "energy", "materials"]})
     total_demand: Dict[str, float] = field(default_factory=lambda: {k: 0.0 for k in ["food", "energy", "materials"]})
     history: List[Dict[str, float]] = field(default_factory=list)
+    volatility_history: Dict[str, List[float]] = field(default_factory=lambda: {k: [] for k in ["food", "energy", "materials"]})
 
 class GlobalMarket:
     """
@@ -74,6 +75,11 @@ class GlobalMarket:
             # Reset totals for next step stats
             self.state.total_demand[res] = d
             self.state.total_supply[res] = s
+            
+            # --- VOLATILITY & CRASH DETECTION (Phase 3) ---
+            v_hist = self.state.volatility_history[res]
+            v_hist.append(self.state.prices[res])
+            if len(v_hist) > 20: v_hist.pop(0)
 
         # Record history
         snapshot = {
@@ -89,6 +95,28 @@ class GlobalMarket:
 
     def get_price(self, resource: str) -> float:
         return self.state.prices.get(resource, 0.0)
+
+    def get_market_metrics(self, resource: str = "food"):
+        """Calculates Volatility and Crash status for a specific resource"""
+        v_hist = self.state.volatility_history.get(resource, [])
+        if len(v_hist) < 5:
+            return {"volatility": 0.0, "status": "STABLE"}
+        
+        # Volatility = Standard Deviation of last 10 steps
+        recent = v_hist[-10:]
+        vol = float(np.std(recent) / max(0.1, np.mean(recent)))
+        
+        # Crash Detection = Current price 15% lower than 5-step average
+        avg_5 = np.mean(v_hist[-5:])
+        curr = self.state.prices[resource]
+        
+        status = "STABLE"
+        if curr < avg_5 * 0.85:
+            status = "CRASH"
+        elif vol > 0.1:
+            status = "VOLATILE"
+            
+        return {"volatility": vol, "status": status}
 
     def apply_shock(self, resource: str, multiplier: float):
         """Random market shock multiplier"""

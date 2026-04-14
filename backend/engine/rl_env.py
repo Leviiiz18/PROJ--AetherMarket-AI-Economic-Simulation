@@ -133,8 +133,9 @@ class NexusParallelEnv(ParallelEnv):
         for agent in self.agents:
             s = self.agent_states[agent]
             if s["alive"]:
-                # Current Wealth = Cash + Inventory (valued at base price to avoid bubble traps)
-                w = s["money"] + (s["food"] * 10.0) + (s["energy"] * 5.0) + (s["materials"] * 15.0)
+                # Current Wealth = Cash + Inventory (valued at CURRENT market price for Phase 3)
+                inv_val = (s["food"] * prices["food"]) + (s["energy"] * prices["energy"]) + (s["materials"] * prices["materials"])
+                w = s["money"] + inv_val
                 agent_wealths[agent] = w
                 total_wealth += w
                 alive_agents += 1
@@ -191,6 +192,38 @@ class NexusParallelEnv(ParallelEnv):
 
         observations = {agent: self._get_obs(agent) for agent in self.agents}
         return observations, rewards, terminations, truncations, {agent: {} for agent in self.agents}
+
+    def get_analytics(self):
+        """Phase 3 Analytical Export"""
+        alive_wealths = [
+            s["money"] + (s["food"] * self.market.state.prices["food"]) + 
+            (s["energy"] * self.market.state.prices["energy"]) + 
+            (s["materials"] * self.market.state.prices["materials"])
+            for s in self.agent_states.values() if s["alive"]
+        ]
+        
+        # 1. Gini Coefficient
+        gini = 0.0
+        if len(alive_wealths) > 1:
+            array = np.array(alive_wealths)
+            index = np.arange(1, len(array) + 1)
+            n = len(array)
+            gini = ((np.sum((2 * index - n  - 1) * np.sort(array))) / (n * np.sum(array)))
+        
+        # 2. Market Metrics
+        m_metrics = self.market.get_market_metrics("food")
+        
+        # 3. Survival
+        total = self.agent_count
+        alive = len(alive_wealths)
+        
+        return {
+            "gini": float(gini),
+            "volatility": m_metrics["volatility"],
+            "market_status": m_metrics["status"],
+            "survival_rate": float(alive / total),
+            "wealth_distribution": [float(w) for w in sorted(alive_wealths)]
+        }
 
     def _handle_trade(self, agent, resource, order_type, qty, rewards):
         s = self.agent_states[agent]

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
   Activity, TrendingUp, Users, Settings, 
-  Zap, Heart, Database, LayoutGrid, Radio, ShieldAlert
+  Zap, Heart, Database, Radio, ShieldAlert
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,9 +32,18 @@ interface MarketData {
   materials: number;
 }
 
+interface AnalyticsData {
+  gini: number;
+  volatility: number;
+  market_status: string;
+  survival_rate: number;
+  wealth_distribution: number[];
+}
+
 interface SimPayload {
   step: number;
   market: MarketData;
+  analytics: AnalyticsData;
   agents: Agent[];
   history: any[];
 }
@@ -71,6 +80,7 @@ const NexusNav = () => {
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 bg-[#111]/80 backdrop-blur-3xl border border-white/5 rounded-3xl px-8 flex items-center gap-10 shadow-2xl p-2">
             {[
                 { label: 'Overview', path: '/', icon: Activity },
+                { label: 'Analysis', path: '/analysis', icon: Database },
                 { label: 'Flux', path: '/market', icon: TrendingUp },
                 { label: 'Roster', path: '/agents', icon: Users },
                 { label: 'Engine', path: '/config', icon: Settings }
@@ -96,11 +106,22 @@ const NexusNav = () => {
 const NexusOverview = ({ data }: any) => {
     const totalWealth = data?.agents.reduce((acc: number, a: Agent) => acc + (a.money || 0), 0) || 0;
     const aliveCount = data?.agents.filter((a: Agent) => a.alive).length || 0;
+    const gini = data?.analytics?.gini || 0;
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-40 px-12 h-screen overflow-y-auto custom-scrollbar pb-32">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <div className="nexus-card flex flex-col justify-center items-center text-center py-20 bg-gradient-to-br from-[#111] to-[#0a0a0a] group">
+                <div className="nexus-card flex flex-col justify-center items-center text-center py-20 bg-gradient-to-br from-[#111] to-[#0a0a0a] group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-6">
+                        <span className={cn(
+                            "text-[8px] font-black px-3 py-1 rounded-full border tracking-widest uppercase",
+                            data?.analytics?.market_status === 'CRASH' ? "bg-red-500/20 text-red-500 border-red-500/30" :
+                            data?.analytics?.market_status === 'VOLATILE' ? "bg-amber-500/20 text-amber-500 border-amber-500/30" :
+                            "bg-[#9d4edd]/20 text-[#9d4edd] border-[#9d4edd]/30"
+                        )}>
+                            Market_{data?.analytics?.market_status || 'STABLE'}
+                        </span>
+                    </div>
                     <span className="text-[11px] font-bold uppercase tracking-[0.5em] opacity-30 mb-6 group-hover:text-[#9d4edd] transition-colors">Total_Global_Capital</span>
                     <h2 className="text-9xl font-display font-black text-gradient leading-none tracking-tighter">
                         ₹{Math.floor(totalWealth).toLocaleString()}
@@ -116,10 +137,10 @@ const NexusOverview = ({ data }: any) => {
                         </div>
                     </div>
                     <div className="nexus-card flex flex-col justify-center p-10">
-                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4 text-[#9d4edd]">System_Volatility</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 mb-4 text-[#9d4edd]">Inequality_Gini</span>
                         <div className="flex items-end gap-3">
-                            <span className="text-6xl font-display font-bold">14.2</span>
-                            <span className="text-xl font-bold opacity-20 mb-2">%</span>
+                            <span className="text-6xl font-display font-bold">{gini.toFixed(2)}</span>
+                            <span className="text-xl font-bold opacity-20 mb-2">INDX</span>
                         </div>
                     </div>
                 </div>
@@ -141,6 +162,87 @@ const NexusOverview = ({ data }: any) => {
                         </div>
                     </div>
                 ))}
+            </div>
+        </motion.div>
+    );
+};
+
+const NexusAnalysis = ({ data }: any) => {
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pt-40 px-12 h-screen overflow-y-auto custom-scrollbar pb-32">
+            <div className="flex flex-col mb-12">
+                <span className="text-[11px] font-bold uppercase tracking-[0.5em] opacity-30 mb-2">Analysis_System_v3.0</span>
+                <h2 className="text-5xl font-display font-bold">Economic Forensics</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div className="lg:col-span-2 nexus-card p-10 flex flex-col h-[400px]">
+                    <div className="flex justify-between items-center mb-8">
+                        <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#9d4edd]">Gini_Coefficient_Timeline</span>
+                        <div className="px-3 py-1 rounded bg-white/5 border border-white/5 text-[9px] font-black opacity-40 uppercase">Inequality_Trend</div>
+                    </div>
+                    <div className="flex-1 w-full h-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data?.history || []}>
+                                <defs>
+                                    <linearGradient id="giniGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#9d4edd" stopOpacity={0.4}/>
+                                        <stop offset="95%" stopColor="#9d4edd" stopOpacity={0}/>
+                                    </linearGradient>
+                                </defs>
+                                <XAxis dataKey="step" hide />
+                                <YAxis domain={[0, 1]} hide />
+                                <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #222' }} />
+                                <Area type="monotone" dataKey="gini" stroke="#9d4edd" fill="url(#giniGrad)" strokeWidth={3} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                <div className="nexus-card p-10 flex flex-col h-[400px]">
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#9d4edd] mb-8 text-center">Wealth_Concentration</span>
+                    <div className="flex-1 w-full h-full flex items-end gap-1 px-4">
+                        {data?.analytics?.wealth_distribution.map((w: number, i: number) => {
+                            const maxW = Math.max(...data?.analytics?.wealth_distribution, 1);
+                            const height = (w / maxW) * 100;
+                            return (
+                                <motion.div 
+                                    key={i} 
+                                    initial={{ height: 0 }} animate={{ height: `${height}%` }}
+                                    className="flex-1 bg-[#9d4edd]/40 rounded-t-sm"
+                                    title={`Wealth: ₹${w.toFixed(0)}`}
+                                />
+                            );
+                        })}
+                    </div>
+                    <div className="mt-6 flex justify-between text-[8px] font-black opacity-20 uppercase tracking-tighter">
+                        <span>Poorest_Node</span>
+                        <span>Wealthiest_Node</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="nexus-card p-10 h-[300px] flex flex-col">
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#9d4edd] mb-8">Survival_Velocity</span>
+                    <div className="flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data?.history || []}>
+                                <XAxis dataKey="step" hide />
+                                <YAxis domain={[0, 1]} hide />
+                                <Area type="stepAfter" dataKey="survival_rate" stroke="#00C7B7" fill="#00C7B710" strokeWidth={2} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+                <div className="nexus-card p-10 h-[300px] flex flex-col justify-center text-center">
+                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-30 text-[#c77dff] mb-4">Market_Volatility_Index</span>
+                    <h3 className="text-7xl font-display font-black">{(data?.analytics?.volatility * 100 || 0).toFixed(1)}%</h3>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                         <div className={cn("w-2 h-2 rounded-full", data?.analytics?.volatility > 0.1 ? "bg-amber-500 animate-pulse" : "bg-green-500")} />
+                         <span className="text-[9px] font-black opacity-40 uppercase tracking-widest">{data?.analytics?.market_status}</span>
+                    </div>
+                </div>
             </div>
         </motion.div>
     );
@@ -401,6 +503,7 @@ export default function App() {
             <AnimatePresence mode="wait">
                 <Routes>
                     <Route path="/" element={<NexusOverview data={data} />} />
+                    <Route path="/analysis" element={<NexusAnalysis data={data} />} />
                     <Route path="/market" element={<FluxStream data={data} />} />
                     <Route path="/agents" element={<AgentRoster data={data} />} />
                     <Route path="/config" element={<KernelOps resetSim={resetSim} />} />

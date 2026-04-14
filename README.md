@@ -50,6 +50,13 @@ Imagine a tiny digital city with **10 smart agents**. To survive, they must mana
 2. **The Market reacts**: If everyone buys, prices skyrocket. If everyone sells, the market crashes.
 3. **The AI learns**: Every time an agent makes a good trade, it gets a "reward" and becomes smarter for the next round.
 
+## 🚀 Hard Metrics & Analysis (Phase 3)
+
+- **📈 Inequality Monitoring**: Live tracking of the **Gini Coefficient** to study wealth concentration patterns.
+- **☣️ Market Health Forensics**: Real-time **Volatility Indexing** and automated **Crash Detection** algorithms.
+- **📉 Demographic Survival**: Live **Survival Rate** tracking showing population decay over the simulation cycle.
+- **📊 Wealth Distribution**: High-fidelity histograms visualizing the capital spread across different neural personas.
+
 ## 🧠 The Mission: What are we learning?
 We are here to **prove that decentralized AI agents can learn, compete, and create complex economic behavior without any central control.** By watching how specialized personalities—like a Risk-Taker or a Careful Trader—handle scarcity and greed, we unlock secrets of emergent intelligence.
 
