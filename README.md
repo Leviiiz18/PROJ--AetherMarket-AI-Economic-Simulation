@@ -54,6 +54,10 @@ Imagine a tiny digital city with **10 smart agents**. To survive, they must mana
 
 - **📈 Inequality Monitoring**: Live tracking of the **Gini Coefficient** to study wealth concentration patterns.
 - **☣️ Market Health Forensics**: Real-time **Volatility Indexing** and automated **Crash Detection** algorithms.
+- **🚨 Contagion Propagation (Phase 5)**: 
+    - **Cascading Failures**: A crash in one resource (e.g., Energy) triggers downward price pressure across the entire ecosystem.
+    - **Interdependency Engine**: Complex resource-coupling logic simulating global economic panic.
+    - **Red Alert Interface**: High-intensity CRT glitch visuals and system-wide alarms during contagion loops.
 - **📉 Demographic Survival**: Live **Survival Rate** tracking showing population decay over the simulation cycle.
 - **📊 Wealth Distribution**: High-fidelity histograms visualizing the capital spread across different neural personas.
 

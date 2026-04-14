@@ -50,8 +50,8 @@ async def reset_sim():
 
 @app.post("/shock/{resource}")
 async def apply_shock(resource: str):
-    env.market.apply_shock(resource, 2.0)
-    print(f">>> KERNEL SHOCK: {resource} INJECTED")
+    env.market.apply_shock(resource, 0.3) # -70% Crash
+    print(f">>> KERNEL SABOTAGE: {resource} COLLAPSED")
     return {"status": "shocked", "resource": resource}
 
 # --- SIMULATION LOOP ---

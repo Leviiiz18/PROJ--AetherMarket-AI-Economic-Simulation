@@ -129,6 +129,7 @@ class NexusParallelEnv(ParallelEnv):
         total_wealth = 0
         alive_agents = 0
         agent_wealths = {}
+        prices = self.market.state.prices
         
         for agent in self.agents:
             s = self.agent_states[agent]
@@ -221,6 +222,7 @@ class NexusParallelEnv(ParallelEnv):
             "gini": float(gini),
             "volatility": m_metrics["volatility"],
             "market_status": m_metrics["status"],
+            "contagion_index": float(self.market.state.contagion_index),
             "survival_rate": float(alive / total),
             "wealth_distribution": [float(w) for w in sorted(alive_wealths)]
         }

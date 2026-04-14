@@ -36,6 +36,7 @@ interface AnalyticsData {
   gini: number;
   volatility: number;
   market_status: string;
+  contagion_index: number;
   survival_rate: number;
   wealth_distribution: number[];
 }
@@ -50,15 +51,23 @@ interface SimPayload {
 
 // --- NEXUS COMPONENTS ---
 
-const NexusHeader = ({ step, isRunning, toggleSim }: any) => (
-    <div className="fixed top-0 left-0 right-0 z-50 px-12 py-8 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent backdrop-blur-[2px]">
+const NexusHeader = ({ step, isRunning, toggleSim, contagionIndex }: any) => (
+    <div className={cn(
+        "fixed top-0 left-0 right-0 z-50 px-12 py-8 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent backdrop-blur-[2px] transition-colors duration-1000",
+        contagionIndex > 0.4 ? "bg-red-900/20 border-b border-red-500/30" : ""
+    )}>
         <div className="flex items-center gap-6">
             <div className="w-12 h-12 rounded-2xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center shadow-2xl overflow-hidden p-1">
                 <img src="/img/L2.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
                 <span className="text-xl font-display font-bold tracking-tight text-white">AetherMarket</span>
-                <span className="text-[10px] font-bold opacity-30 tracking-[0.2em] uppercase">Status: Nominal / Cycle {step}</span>
+                <span className={cn(
+                    "text-[10px] font-bold tracking-[0.2em] uppercase transition-colors",
+                    contagionIndex > 0.4 ? "text-red-500 animate-pulse" : "opacity-30"
+                )}>
+                    {contagionIndex > 0.4 ? 'SYSTEM_ALERT: CONTAGION_PROPAGATING' : `Status: Nominal / Cycle ${step}`}
+                </span>
             </div>
         </div>
 
@@ -438,13 +447,13 @@ const KernelOps = ({ resetSim }: any) => {
                     </div>
                     <div className="grid grid-cols-1 gap-4">
                         <button onClick={() => triggerShock('food')} className="nexus-card bg-white/5 border border-white/5 py-4 rounded-xl text-[10px] font-black tracking-widest hover:bg-red-500/20 hover:text-red-500 transition-all uppercase text-center">
-                            Shock_Survival_Supply
+                            Sabotage_Survival_Supply
                         </button>
                         <button onClick={() => triggerShock('energy')} className="nexus-card bg-white/5 border border-white/5 py-4 rounded-xl text-[10px] font-black tracking-widest hover:bg-amber-500/20 hover:text-amber-500 transition-all uppercase text-center">
-                            Destabilize_Kinetic_Grid
+                            Sabotage_Kinetic_Grid
                         </button>
                         <button onClick={() => triggerShock('materials')} className="nexus-card bg-white/5 border border-white/5 py-4 rounded-xl text-[10px] font-black tracking-widest hover:bg-purple-500/20 hover:text-purple-500 transition-all uppercase text-center">
-                            Corrupt_Atomic_Materials
+                            Sabotage_Atomic_Materials
                         </button>
                         <button onClick={resetSim} className="nexus-card bg-[#9d4edd]/10 border border-[#9d4edd]/20 py-4 rounded-xl text-[10px] font-black tracking-widest text-[#9d4edd] hover:bg-[#9d4edd] hover:text-black transition-all uppercase text-center mt-4">
                             Perform_Global_Purge
@@ -497,7 +506,28 @@ export default function App() {
       <div className="bg-[#050505] text-white selection:bg-[#9d4edd] selection:text-black min-h-screen font-sans overflow-hidden">
           <div className="nexus-aura" />
           
-          <NexusHeader step={data?.step} isRunning={isRunning} toggleSim={toggleSim} />
+          {data?.analytics?.contagion_index && data.analytics.contagion_index > 0.4 && (
+            <div className="fixed inset-0 pointer-events-none z-[100] animate-glitch overflow-hidden opacity-30">
+              <div className="absolute inset-0 bg-red-900/20 mix-blend-overlay" />
+              <div className="absolute inset-0 bg-[url('https://media.giphy.com/media/oEI9uWUicfGzS/giphy.gif')] opacity-5 grayscale bg-repeat mix-blend-screen" />
+            </div>
+          )}
+
+          <style>{`
+            @keyframes glitch {
+              0% { transform: translate(0); }
+              20% { transform: translate(-5px, 5px) skewX(10deg); filter: hue-rotate(90deg); }
+              40% { transform: translate(5px, -5px) skewY(-10deg); }
+              60% { transform: translate(-2px, 2px); filter: contrast(2); }
+              80% { transform: translate(2px, -2px); }
+              100% { transform: translate(0); }
+            }
+            .animate-glitch {
+              animation: glitch 0.2s infinite;
+            }
+          `}</style>
+          
+          <NexusHeader step={data?.step} isRunning={isRunning} toggleSim={toggleSim} contagionIndex={data?.analytics?.contagion_index} />
           
           <main className="relative z-10 w-full">
             <AnimatePresence mode="wait">

@@ -13,6 +13,7 @@ class MarketState:
     total_demand: Dict[str, float] = field(default_factory=lambda: {k: 0.0 for k in ["food", "energy", "materials"]})
     history: List[Dict[str, float]] = field(default_factory=list)
     volatility_history: Dict[str, List[float]] = field(default_factory=lambda: {k: [] for k in ["food", "energy", "materials"]})
+    contagion_index: float = 0.0
 
 class GlobalMarket:
     """
@@ -71,6 +72,26 @@ class GlobalMarket:
             
             # Ensure prices stay positive
             self.state.prices[res] = max(0.1, self.state.prices[res])
+            
+            # --- CONTAGION PROPAGATION (Phase 5) ---
+            # Interdependency: Energy crash hits Food/Materials. Materials crash hits Energy.
+            matrix = {
+                "energy": {"food": 0.8, "materials": 0.4},
+                "materials": {"energy": 0.5},
+                "food": {"energy": 0.2}
+            }
+            
+            active_contagion = 0.0
+            for source, targets in matrix.items():
+                metrics = self.get_market_metrics(source)
+                if metrics["status"] == "CRASH":
+                    if res in targets:
+                        # Downward pressure from neighbor's crash
+                        impact = targets[res] * 0.1 # 10% drop per step during neighbor crash
+                        self.state.prices[res] *= (1 - impact)
+                        active_contagion = max(active_contagion, targets[res])
+            
+            self.state.contagion_index = active_contagion
             
             # Reset totals for next step stats
             self.state.total_demand[res] = d
