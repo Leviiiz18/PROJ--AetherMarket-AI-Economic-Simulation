@@ -1,0 +1,12 @@
+gymnasium==0.28.1
+ray[rllib,tune]==2.9.0
+pandas
+numpy
+fastapi
+uvicorn
+websockets
+pydantic
+python-dotenv
+openai
+scikit-learn
+matplotlib

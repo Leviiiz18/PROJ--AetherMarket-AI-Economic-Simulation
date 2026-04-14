@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --nexus-black: #050505;
+  --nexus-purple: #9d4edd;
+  --nexus-purple-dim: #5a189a;
+  --nexus-surface: #111111;
+  --nexus-surface-high: #1a1a1a;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--nexus-black);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* --- THE NEXUS BACKGROUND --- */
+
+.nexus-aura {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 10%, rgba(157, 78, 221, 0.08) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* --- LIQUID FLUX STREAM --- */
+
+.flux-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-gradient {
+  filter: url('#liquid-filter');
+}
+
+/* --- STATUS INDICATORS --- */
+
+.status-ring {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--nexus-purple);
+  position: relative;
+}
+
+.status-ring.active::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid var(--nexus-purple);
+  opacity: 0.3;
+  animation: pulse-out 2s infinite;
+}
+
+@keyframes pulse-out {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* --- NEXUS CARDS --- */
+
+.nexus-card {
+  background: var(--nexus-surface);
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.nexus-card:hover {
+  transform: translateY(-4px);
+  background: var(--nexus-surface-high);
+  border-color: rgba(157, 78, 221, 0.2);
+}
+
+/* --- VOLATILITY PULSE --- */
+
+.pulse-path {
+  fill: none;
+  stroke: var(--nexus-purple);
+  stroke-width: 2;
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: draw-pulse 5s linear infinite;
+}
+
+@keyframes draw-pulse {
+  to { stroke-dashoffset: 0; }
+}
+
+/* --- TYPOGRAPHY --- */
+
+.font-display { font-family: 'Space Grotesk', sans-serif; }
+
+.text-gradient {
+  background: linear-gradient(to bottom, #fff, rgba(255,255,255,0.4));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--nexus-surface-high);
+  border-radius: 10px;
+}

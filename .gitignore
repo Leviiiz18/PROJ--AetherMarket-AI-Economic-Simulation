@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# Build and IDE
+dist/
+build/
+.vscode/
+.idea/
+.DS_Store
+
+# Large Files & Models
+*.zip
+*.tar.gz
+*.pt
+*nexus_policy*
+
+# EXCLUDE LOGBOOK (Strictly requested by user)
+LOGBOOK.md
+
+# Artifacts & Temporary
+artifacts/
+scratch/
+test.txt
+txt.txt
