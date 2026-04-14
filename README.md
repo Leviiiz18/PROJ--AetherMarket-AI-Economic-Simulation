@@ -32,12 +32,20 @@
   <img src="img/I5.png" width="600" alt="Global Telemetry" />
 </div>
 
-## 🏗️ Phase 2 Achievements
+## 🕹️ How it Works (The Workflow)
+Imagine a tiny digital city with **10 smart agents**. To survive, they must manage their money and food. They watch a live **Market** where prices go up and down based on their own actions. 
+1. **Agents make a choice**: Buy, Sell, or Wait.
+2. **The Market reacts**: If everyone buys, prices skyrocket. If everyone sells, the market crashes.
+3. **The AI learns**: Every time an agent makes a good trade, it gets a "reward" and becomes smarter for the next round.
 
-- **🎭 Heterogeneous Personas**: Agents are initialized with unique identities—`RISK_TAKERS`, `CONSERVATIVE`, or `OPPORTUNIST`—each driven by specialized reward shaping.
-- **📜 Neural Chronology Terminal**: A per-agent diagnostic engine that logs and visualizes the "Reasoning Chain" (`State -> Action -> Reward`) for real-time auditing.
-- **👁️ Expanded Sensory Input**: Agents now consume a 14-dimensional information vector including one-hot persona encoding and market trend markers.
-- **🧠 Advanced PPO Evolution**: High-fidelity policies trained for 200,000+ steps to handle complex behavioral divergence.
+## 🧠 The Mission: What are we learning?
+We are studying how different personalities—like a **Risk-Taker** who hoards resources or a **Conservative** who plays it safe—change the economy. We want to see:
+- Can a stable economy exist with different types of people?
+- Do greedy agents cause crashes?
+- How does "personality" change the price of things?
+
+## 🏆 The Ultimate Goal
+To build a perfect **"Economic Sandbox"**. A safe digital place where we can test real-world market ideas and see the results instantly without risking real money. 
 
 ## 📂 Project Structure
 
@@ -69,12 +77,6 @@ npm install
 npm run dev
 ```
 
-## 🎮 How It Works
-
-1. **Environment**: Agents produce, consume, and trade resources in a zero-sum economic loop.
-2. **Survival**: Resources are depleted over time. Depletion leads to agent death.
-3. **Persona Logic**: A shared policy manages all agents, but the input vector differentiates their roles, causing divergent survival strategies.
-4. **Market Clearing**: Prices automatically adjust every step based on the global buy/sell ratio.
 
 ---
 
