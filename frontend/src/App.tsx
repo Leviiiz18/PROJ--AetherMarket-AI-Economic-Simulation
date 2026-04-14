@@ -54,7 +54,7 @@ const NexusHeader = ({ step, isRunning, toggleSim }: any) => (
     <div className="fixed top-0 left-0 right-0 z-50 px-12 py-8 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent backdrop-blur-[2px]">
         <div className="flex items-center gap-6">
             <div className="w-12 h-12 rounded-2xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center shadow-2xl overflow-hidden p-1">
-                <img src="/img/L1.png" alt="Logo" className="w-full h-full object-contain" />
+                <img src="/img/L2.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div className="flex flex-col">
                 <span className="text-xl font-display font-bold tracking-tight text-white">AetherMarket</span>

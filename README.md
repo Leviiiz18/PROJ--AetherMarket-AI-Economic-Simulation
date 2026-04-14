@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="img/L1.png" width="120" alt="AetherMarket Logo" />
+  <img src="img/L2.png" width="120" alt="AetherMarket Logo" />
   <h1>AetherMarket 🚀 (v12.1)</h1>
   <p><b>Heterogeneous Multi-Agent Reinforcement Learning Arena</b></p>
   
