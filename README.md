@@ -5,6 +5,7 @@
   
   [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![Reinforcement Learning](https://img.shields.io/badge/Reinforcement--Learning-FFD43B?style=for-the-badge&logo=google-gemini&logoColor=white)](https://en.wikipedia.org/wiki/Reinforcement_learning)
+  [![PettingZoo](https://img.shields.io/badge/PettingZoo-00C7B7?style=for-the-badge&logo=gamedeveloper&logoColor=white)](https://pettingzoo.farama.org/)
   [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
   [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
   [![Stable Baselines3](https://img.shields.io/badge/SB3-FF6F00?style=for-the-badge&logo=pytorch&logoColor=white)](https://stable-baselines3.readthedocs.io/)
