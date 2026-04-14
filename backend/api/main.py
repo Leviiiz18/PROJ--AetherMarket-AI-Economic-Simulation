@@ -18,9 +18,22 @@ from engine.rl_env import NexusParallelEnv
 
 app = FastAPI()
 
+LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
+EVOLUTION_LOG = os.path.join(LOG_DIR, "evolution_audit.log")
+
+def log_evolution_event(message: str):
+    if not os.path.exists(LOG_DIR):
+        os.makedirs(LOG_DIR, exist_ok=True)
+    with open(EVOLUTION_LOG, "a") as f:
+        try:
+            timestamp = asyncio.get_event_loop().time()
+        except RuntimeError:
+            timestamp = 0
+        f.write(f"[{timestamp:.2f}] {message}\n")
+
 # --- SIMULATION STATE ---
 NUM_AGENTS = 10
-env = NexusParallelEnv(num_agents=NUM_AGENTS)
+env = NexusParallelEnv(num_agents=NUM_AGENTS, logger_cb=log_evolution_event)
 active_connections: List[WebSocket] = []
 running = False
 
@@ -43,7 +56,7 @@ load_policy()
 @app.post("/reset")
 async def reset_sim():
     global env
-    env = NexusParallelEnv(num_agents=NUM_AGENTS)
+    env = NexusParallelEnv(num_agents=NUM_AGENTS, logger_cb=log_evolution_event)
     load_policy()
     print(">>> KERNEL RESET: STATE PURGED")
     return {"status": "reset"}
@@ -113,9 +126,14 @@ async def run_simulation():
                     "id": aid,
                     "money": state["money"],
                     "food": state["food"],
+                    "energy": state["energy"],
+                    "materials": state["materials"],
                     "alive": state["alive"],
+                    "extinct": state["extinct"],
+                    "lives": state["lives"],
+                    "generation": state["generation"],
                     "reward": round(rewards.get(aid, 0), 2),
-                    "action": ["HOLD", "BUY_S", "BUY_L", "SELL_S", "SELL_L", "PROD"][actions.get(aid, 0)],
+                    "action": ["HOLD", "BUY_F", "SELL_F", "BUY_E", "SELL_E", "BUY_M", "SELL_M", "PROD", "BUY_FL", "SELL_FL"][actions.get(aid, 0)],
                     "persona": state["persona"],
                     "logs": list(agent_logs[aid])
                 }

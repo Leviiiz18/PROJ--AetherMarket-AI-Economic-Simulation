@@ -12,10 +12,11 @@ class NexusParallelEnv(ParallelEnv):
     """
     metadata = {"render_modes": ["human"], "name": "nexus_parallel_v2"}
 
-    def __init__(self, num_agents=10, max_steps=500):
+    def __init__(self, num_agents=10, max_steps=500, logger_cb=None):
         super().__init__()
         self.agent_count = num_agents
         self.max_steps = max_steps
+        self.logger_cb = logger_cb
         self.agents = [f"agent_{i}" for i in range(num_agents)]
         self.possible_agents = self.agents[:]
         
@@ -26,9 +27,9 @@ class NexusParallelEnv(ParallelEnv):
             for agent in self.agents
         }
         
-        # Actions: 0:Hold, 1:Buy_S, 2:Buy_L, 3:Sell_S, 4:Sell_L, 5:Produce
+        # Actions: 0:Hold, 1:Buy_F, 2:Sell_F, 3:Buy_E, 4:Sell_E, 5:Buy_M, 6:Sell_M, 7:Produce, 8:Buy_F_L, 9:Sell_F_L
         self.action_spaces = {
-            agent: Discrete(6)
+            agent: Discrete(10)
             for agent in self.agents
         }
 
@@ -62,6 +63,11 @@ class NexusParallelEnv(ParallelEnv):
                 "energy": 5.0 + random.uniform(-1, 1),
                 "materials": 5.0 + random.uniform(-1, 1),
                 "alive": True,
+                "extinct": False,
+                "lives": 3,
+                "generation": 1,
+                "dynasty_peak": 100.0,
+                "cooldown": 0,
                 "last_wealth": 100.0,
                 "persona": random.choice(["RISK_TAKER", "CONSERVATIVE", "OPPORTUNIST"])
             } for agent in self.agents
@@ -101,6 +107,22 @@ class NexusParallelEnv(ParallelEnv):
         self.current_step += 1
         self.prev_prices = self.market.state.prices.copy()
         
+        # 0. Respawn Management (Phase 4)
+        for agent, s in self.agent_states.items():
+            if not s["alive"]:
+                if s["extinct"]:
+                    # Extinct agents stay dead for 200 steps, then replaced by "Wild Newcomer"
+                    s["cooldown"] -= 1
+                    if s["cooldown"] <= -200:
+                         print(f">>> [NEWCOMER] {agent} slot reclaimed by fresh neural brain.")
+                         self._respawn_agent(agent, is_newcomer=True)
+                else:
+                    # Heirs respawn after a short 5-step mourning period
+                    s["cooldown"] -= 1
+                    if s["cooldown"] <= -5:
+                        print(f">>> [BIRTH] {agent} Heir G{s['generation']} has entered the arena.")
+                        self._respawn_agent(agent, is_newcomer=False)
+        
         rewards = {agent: 0.0 for agent in self.agents}
         terminations = {agent: False for agent in self.agents}
         truncations = {agent: False for agent in self.agents}
@@ -113,14 +135,18 @@ class NexusParallelEnv(ParallelEnv):
             self.last_actions[agent] = action
             
             if action == 1: self._handle_trade(agent, "food", "buy", 1.0, rewards)
-            elif action == 2: self._handle_trade(agent, "food", "buy", 5.0, rewards)
-            elif action == 3: self._handle_trade(agent, "food", "sell", 1.0, rewards)
-            elif action == 4: self._handle_trade(agent, "food", "sell", 5.0, rewards)
-            elif action == 5: # Produce
+            elif action == 2: self._handle_trade(agent, "food", "sell", 1.0, rewards)
+            elif action == 3: self._handle_trade(agent, "energy", "buy", 1.0, rewards)
+            elif action == 4: self._handle_trade(agent, "energy", "sell", 1.0, rewards)
+            elif action == 5: self._handle_trade(agent, "materials", "buy", 1.0, rewards)
+            elif action == 6: self._handle_trade(agent, "materials", "sell", 1.0, rewards)
+            elif action == 7: # Produce
                 if s["energy"] >= 1 and s["materials"] >= 1:
                     s["energy"] -= 1; s["materials"] -= 1; s["food"] += 2
                     rewards[agent] += 1.0
                 else: rewards[agent] -= 0.5
+            elif action == 8: self._handle_trade(agent, "food", "buy", 5.0, rewards)
+            elif action == 9: self._handle_trade(agent, "food", "sell", 5.0, rewards)
 
         # 2. Environment Dynamics
         self.market.step()
@@ -154,10 +180,9 @@ class NexusParallelEnv(ParallelEnv):
             s = self.agent_states[agent]
             if s["alive"]:
                 # Basic Needs
-                s["food"] -= 0.2
+                s["food"] -= 0.15 # Reduced for Phase 4 survival
                 if s["food"] <= 0:
-                    s["alive"] = False; terminations[agent] = True
-                    rewards[agent] -= 100.0
+                    self._handle_agent_death(agent, "Starvation", rewards, terminations)
                 else:
                     rewards[agent] += 1.0 # Significant survival bonus
                     
@@ -227,6 +252,45 @@ class NexusParallelEnv(ParallelEnv):
             "wealth_distribution": [float(w) for w in sorted(alive_wealths)]
         }
 
+    def _handle_agent_death(self, agent, reason, rewards, terminations):
+        s = self.agent_states[agent]
+        s["alive"] = False
+        terminations[agent] = True
+        rewards[agent] -= 100.0  # Heavy penalty for dying
+        
+        # DYNASTY AUDIT (Phase 4)
+        current_peak = s["last_wealth"]
+        improved = current_peak > s["dynasty_peak"]
+        
+        s["lives"] -= 1
+        msg = f"DYNASTY ALERT: {agent} died ({reason}). G{s['generation']}, Peak: ₹{s['dynasty_peak']:.1f}, Lives left: {s['lives']}"
+        print(f">>> {msg}")
+        if self.logger_cb: self.logger_cb(msg)
+        
+        if improved:
+            s["dynasty_peak"] = current_peak
+        
+        if s["lives"] <= 0:
+            if not improved:
+                s["extinct"] = True
+                emsg = f"[EXTINCTION] {agent} culling triggered. Failed to improve wealth."
+                print(f">>> {emsg}")
+                if self.logger_cb: self.logger_cb(emsg)
+            else:
+                # Earned a reset (rebirth)
+                s["extinct"] = False
+                s["lives"] = 3
+                s["generation"] += 1
+                bmsg = f"[EVOLUTION] {agent} setting new dynasty peak. G{s['generation']} incoming."
+                print(f">>> {bmsg}")
+                if self.logger_cb: self.logger_cb(bmsg)
+        else:
+            # Heir spawning protocol (standard respawn)
+            s["generation"] += 1
+            hmsg = f"[HEIR] {agent} G{s['generation']} reporting for duty."
+            print(f">>> {hmsg}")
+            if self.logger_cb: self.logger_cb(hmsg)
+
     def _handle_trade(self, agent, resource, order_type, qty, rewards):
         s = self.agent_states[agent]
         price = self.market.get_price(resource)
@@ -235,13 +299,30 @@ class NexusParallelEnv(ParallelEnv):
         if order_type == "buy":
             if s["money"] >= total_cost:
                 s["money"] -= total_cost
-                if resource == "food": s["food"] += qty
+                s[resource] += qty
                 self.market.submit_order(agent, resource, qty, "buy")
             else: rewards[agent] -= 0.5
         else: # Sell
-            if s["food"] >= qty:
-                s["food"] -= qty
+            if s[resource] >= qty:
+                s[resource] -= qty
                 s["money"] += total_cost
                 self.market.submit_order(agent, resource, qty, "sell")
                 rewards[agent] += 0.2
             else: rewards[agent] -= 0.2
+
+    def _respawn_agent(self, agent, is_newcomer=False):
+        s = self.agent_states[agent]
+        s["alive"] = True
+        s["money"] = 100.0 + random.uniform(-10, 10)
+        s["food"] = 10.0 + random.uniform(-1, 1) # Support Phase 4 buff
+        s["energy"] = 5.0 + random.uniform(-1, 1)
+        s["materials"] = 5.0 + random.uniform(-1, 1)
+        s["last_wealth"] = 100.0
+        s["cooldown"] = 0
+        
+        if is_newcomer:
+            s["extinct"] = False
+            s["lives"] = 3
+            s["generation"] = 1
+            s["dynasty_peak"] = 100.0
+            s["persona"] = random.choice(["RISK_TAKER", "CONSERVATIVE", "OPPORTUNIST"])
