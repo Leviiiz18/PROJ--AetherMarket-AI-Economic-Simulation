@@ -33,6 +33,18 @@
 </div>
 
 ## 🕹️ How it Works (The Workflow)
+
+```mermaid
+graph TD
+    A[<b>AI Agents</b><br/>Neural Persona Policy] -->|1. Submit Trade Actions| B[<b>Aether Market</b><br/>Dynamic Clearing House]
+    B -->|2. Price Discovery| C[<b>Global Economy</b><br/>Resource Environment]
+    C -->|3. Survival & Rewards| A
+    C -->|4. Next State Sensory| A
+    style A fill:#1a1a1a,stroke:#9d4edd,stroke-width:2px,color:#fff
+    style B fill:#1a1a1a,stroke:#00C7B7,stroke-width:2px,color:#fff
+    style C fill:#1a1a1a,stroke:#FFD43B,stroke-width:2px,color:#fff
+```
+
 Imagine a tiny digital city with **10 smart agents**. To survive, they must manage their money and food. They watch a live **Market** where prices go up and down based on their own actions. 
 1. **Agents make a choice**: Buy, Sell, or Wait.
 2. **The Market reacts**: If everyone buys, prices skyrocket. If everyone sells, the market crashes.
